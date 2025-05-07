@@ -15,14 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Save settings when button is clicked
     document.getElementById('save-button').addEventListener('click', function() {
       const apiProvider = document.getElementById('api-provider').value;
       const openaiKey = document.getElementById('openai-key').value;
       const geminiKey = document.getElementById('gemini-key').value;
       const deepseekKey = document.getElementById('deepseek-key').value;
       
-      // Validate that at least the selected API has a key
       let isValid = false;
       
       if (apiProvider === 'openai' && openaiKey) {
