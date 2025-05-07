@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Choice Helper Settings</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 320px;
+      padding: 15px;
+    }
+    h1 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .api-section {
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    .api-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .footer {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Choice Helper Settings</h1>
+  
+  <div class="section">
+    <label for="api-provider">Select AI Provider:</label>
+    <select id="api-provider">
+      <option value="openai">ChatGPT (OpenAI)</option>
+      <option value="gemini">Gemini (Google)</option>
+      <option value="deepseek">DeepSeek</option>
+    </select>
+  </div>
+  
+  <div class="section">
+    <div class="api-section">
+      <div class="api-title">OpenAI API Key</div>
+      <input type="text" id="openai-key" placeholder="Enter OpenAI API Key">
+    </div>
+    
+    <div class="api-section">
+      <div class="api-title">Gemini API Key</div>
+      <input type="text" id="gemini-key" placeholder="Enter Gemini API Key">
+    </div>
+    
+    <div class="api-section">
+      <div class="api-title">DeepSeek API Key</div>
+      <input type="text" id="deepseek-key" placeholder="Enter DeepSeek API Key">
+    </div>
+  </div>
+  
+  <div class="section">
+    <button id="save-button">Save Settings</button>
+    <div id="status" class="status"></div>
+  </div>
+  
+  <div class="footer">
+    <p>Use keyboard shortcut: <strong>Ctrl+Q</strong> to process selected text</p>
+    <p>Or right-click and select "Get AI answer" from context menu</p>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
