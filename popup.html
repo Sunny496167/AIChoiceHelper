@@ -1,118 +1,320 @@
+
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>AI Choice Helper Settings</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Choice Helper</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      width: 320px;
-      padding: 15px;
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #f0f4f8;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --error: #ef4444;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --transition: all 0.3s ease;
     }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    body {
+      width: 340px;
+      padding: 24px;
+      background: linear-gradient(135deg, #fafbff 0%, #f8faff 100%);
+      color: var(--text);
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    
+    .logo {
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
     h1 {
       font-size: 18px;
-      margin-bottom: 15px;
-      color: #333;
+      font-weight: 600;
+      color: var(--text);
     }
-    .section {
-      margin-bottom: 20px;
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--card-shadow);
     }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
     label {
       display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-      color: #555;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-light);
+      margin-bottom: 6px;
     }
-    input[type="text"], select {
+    
+    select, input {
       width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text);
+      background-color: white;
+      transition: var(--transition);
     }
+    
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+    
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+    
     .api-section {
-      padding: 10px;
-      background-color: #f9f9f9;
-      border-radius: 5px;
-      margin-bottom: 10px;
+      background-color: white;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      transition: var(--transition);
     }
+    
+    .api-section:hover {
+      border-color: var(--primary);
+    }
+    
     .api-title {
-      font-weight: bold;
-      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    button {
-      background-color: #4285f4;
+    
+    .api-title-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .button {
+      width: 100%;
+      background-color: var(--primary);
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
-      font-weight: bold;
+      transition: var(--transition);
     }
-    button:hover {
-      background-color: #3367d6;
+    
+    .button:hover {
+      background-color: var(--primary-dark);
     }
+    
     .status {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 4px;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
       display: none;
     }
+    
     .success {
-      background-color: #d4edda;
-      color: #155724;
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success);
     }
+    
     .error {
-      background-color: #f8d7da;
-      color: #721c24;
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--error);
     }
+    
     .footer {
-      margin-top: 15px;
+      margin-top: 20px;
       font-size: 12px;
-      color: #666;
+      color: var(--text-light);
       text-align: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .footer p {
+      margin-bottom: 4px;
+    }
+    
+    .kbd {
+      display: inline-block;
+      padding: 2px 5px;
+      font-size: 11px;
+      font-weight: 500;
+      background-color: var(--secondary);
+      border-radius: 4px;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    }
+    
+    .input-wrapper {
+      position: relative;
+    }
+    
+    .input-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
     }
   </style>
 </head>
 <body>
-  <h1>AI Choice Helper Settings</h1>
-  
-  <div class="section">
-    <label for="api-provider">Select AI Provider:</label>
-    <select id="api-provider">
-      <option value="openai">ChatGPT (OpenAI)</option>
-      <option value="gemini">Gemini (Google)</option>
-      <option value="deepseek">DeepSeek</option>
-    </select>
-  </div>
-  
-  <div class="section">
-    <div class="api-section">
-      <div class="api-title">OpenAI API Key</div>
-      <input type="text" id="openai-key" placeholder="Enter OpenAI API Key">
+  <div class="container">
+    <div class="header">
+      <div class="logo">A</div>
+      <h1>AI Choice Helper</h1>
     </div>
     
-    <div class="api-section">
-      <div class="api-title">Gemini API Key</div>
-      <input type="text" id="gemini-key" placeholder="Enter Gemini API Key">
+    <div class="card">
+      <div class="form-group">
+        <label for="api-provider">Select AI Provider</label>
+        <select id="api-provider">
+          <option value="openai">ChatGPT (OpenAI)</option>
+          <option value="gemini">Gemini (Google)</option>
+          <option value="deepseek">DeepSeek</option>
+        </select>
+      </div>
+      
+      <div class="api-section">
+        <div class="api-title">
+          <span class="api-title-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1.5C7.1716 1.5 6.5 2.17157 6.5 3C6.5 3.82843 7.1716 4.5 8 4.5C8.8284 4.5 9.5 3.82843 9.5 3C9.5 2.17157 8.8284 1.5 8 1.5Z" fill="#64748B"/>
+              <path d="M4 3.5C3.44772 3.5 3 3.94772 3 4.5C3 5.05228 3.44772 5.5 4 5.5C4.55228 5.5 5 5.05228 5 4.5C5 3.94772 4.55228 3.5 4 3.5Z" fill="#64748B"/>
+              <path d="M3 7.5C2.44772 7.5 2 7.94772 2 8.5C2 9.05228 2.44772 9.5 3 9.5C3.55228 9.5 4 9.05228 4 8.5C4 7.94772 3.55228 7.5 3 7.5Z" fill="#64748B"/>
+              <path d="M4 11.5C3.44772 11.5 3 11.9477 3 12.5C3 13.0523 3.44772 13.5 4 13.5C4.55228 13.5 5 13.0523 5 12.5C5 11.9477 4.55228 11.5 4 11.5Z" fill="#64748B"/>
+              <path d="M12 3.5C11.4477 3.5 11 3.94772 11 4.5C11 5.05228 11.4477 5.5 12 5.5C12.5523 5.5 13 5.05228 13 4.5C13 3.94772 12.5523 3.5 12 3.5Z" fill="#64748B"/>
+              <path d="M13 7.5C12.4477 7.5 12 7.94772 12 8.5C12 9.05228 12.4477 9.5 13 9.5C13.5523 9.5 14 9.05228 14 8.5C14 7.94772 13.5523 7.5 13 7.5Z" fill="#64748B"/>
+              <path d="M12 11.5C11.4477 11.5 11 11.9477 11 12.5C11 13.0523 11.4477 13.5 12 13.5C12.5523 13.5 13 13.0523 13 12.5C13 11.9477 12.5523 11.5 12 11.5Z" fill="#64748B"/>
+              <path d="M8 6.5C7.1716 6.5 6.5 7.17157 6.5 8C6.5 8.82843 7.1716 9.5 8 9.5C8.8284 9.5 9.5 8.82843 9.5 8C9.5 7.17157 8.8284 6.5 8 6.5Z" fill="#64748B"/>
+              <path d="M6.5 13C6.5 12.1716 7.1716 11.5 8 11.5C8.8284 11.5 9.5 12.1716 9.5 13C9.5 13.8284 8.8284 14.5 8 14.5C7.1716 14.5 6.5 13.8284 6.5 13Z" fill="#64748B"/>
+            </svg>
+          </span>
+          OpenAI API Key
+        </div>
+        <div class="input-wrapper">
+          <input type="password" id="openai-key" placeholder="Enter your OpenAI API Key">
+          <div class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2.5 8C2.5 8 4.5 4 8 4C11.5 4 13.5 8 13.5 8C13.5 8 11.5 12 8 12C4.5 12 2.5 8 2.5 8Z" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="8" cy="8" r="2" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      <div class="api-section">
+        <div class="api-title">
+          <span class="api-title-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2.5 12.5H13.5" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10.5 3.5L12.5 5.5L10.5 7.5" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.5 8.5L3.5 10.5L5.5 12.5" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12.5 5.5H8.5C6.84315 5.5 5.5 6.84315 5.5 8.5V10.5" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          Gemini API Key
+        </div>
+        <div class="input-wrapper">
+          <input type="password" id="gemini-key" placeholder="Enter your Gemini API Key">
+          <div class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2.5 8C2.5 8 4.5 4 8 4C11.5 4 13.5 8 13.5 8C13.5 8 11.5 12 8 12C4.5 12 2.5 8 2.5 8Z" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="8" cy="8" r="2" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      <div class="api-section">
+        <div class="api-title">
+          <span class="api-title-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 3.5V12.5" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12.5 8L3.5 8" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          DeepSeek API Key
+        </div>
+        <div class="input-wrapper">
+          <input type="password" id="deepseek-key" placeholder="Enter your DeepSeek API Key">
+          <div class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2.5 8C2.5 8 4.5 4 8 4C11.5 4 13.5 8 13.5 8C13.5 8 11.5 12 8 12C4.5 12 2.5 8 2.5 8Z" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="8" cy="8" r="2" stroke="#64748B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      <button id="save-button" class="button">Save Settings</button>
+      <div id="status" class="status success">Settings saved successfully!</div>
     </div>
     
-    <div class="api-section">
-      <div class="api-title">DeepSeek API Key</div>
-      <input type="text" id="deepseek-key" placeholder="Enter DeepSeek API Key">
+    <div class="footer">
+      <p>Use keyboard shortcut: <span class="kbd">Ctrl</span> + <span class="kbd">Q</span> to process selected text</p>
+      <p>Or right-click and select "Get AI answer" from context menu</p>
     </div>
   </div>
-  
-  <div class="section">
-    <button id="save-button">Save Settings</button>
-    <div id="status" class="status"></div>
-  </div>
-  
-  <div class="footer">
-    <p>Use keyboard shortcut: <strong>Ctrl+Q</strong> to process selected text</p>
-    <p>Or right-click and select "Get AI answer" from context menu</p>
-  </div>
-
   <script src="popup.js"></script>
 </body>
 </html>

@@ -260,7 +260,7 @@ function showResult(result) {
   notification.style.background = "transparent";
   notification.style.fontSize = "12px";
   notification.style.fontWeight = "normal";
-  notification.style.color = "#000";
+  notification.style.color = "#dcdcdc";
   notification.style.zIndex = "9999";
   notification.style.opacity = "0";
   notification.style.transition = "opacity 0.3s ease-in-out";
@@ -303,7 +303,7 @@ function showNotification(message) {
   notification.style.padding = "5px 7px";
   notification.style.background = "transparent";
   notification.style.fontSize = "4px";
-  notification.style.color = "#333";
+  notification.style.color = "#dcdcdc";
   notification.style.zIndex = "9999";
   notification.style.opacity = "0";
   notification.style.transition = "opacity 0.3s ease-in-out";
