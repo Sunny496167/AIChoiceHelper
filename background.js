@@ -286,19 +286,14 @@ function showResult(result) {
   notification.style.top = "50%";
   notification.style.left = "50%";
   notification.style.transform = "translate(-50%, -50%)";
-  notification.style.padding = "15px 25px";
-  notification.style.background = "rgba(0, 0, 0, 0.9)";
-  notification.style.fontSize = "48px";
-  notification.style.fontWeight = "bold";
-  notification.style.color = "#00ff00";
-  notification.style.borderRadius = "12px";
-  notification.style.border = "3px solid #00ff00";
-  notification.style.boxShadow = "0 8px 32px rgba(0, 255, 0, 0.3)";
+  notification.style.padding = "5px 9px";
+  notification.style.fontSize = "16px";
+  notification.style.fontWeight = "normal";
+  notification.style.color = "#5f5e5e4e";
   notification.style.zIndex = "2147483647";
   notification.style.opacity = "0";
   notification.style.transition = "opacity 0.3s ease-in-out";
   notification.style.fontFamily = "monospace";
-  notification.style.letterSpacing = "2px";
   notification.textContent = result;
   
   // Add notification to page
@@ -335,13 +330,8 @@ function showNotification(message) {
   notification.style.top = "50%";
   notification.style.left = "50%";
   notification.style.transform = "translate(-50%, -50%)";
-  notification.style.padding = "12px 20px";
-  notification.style.background = "rgba(0, 0, 0, 0.85)";
-  notification.style.fontSize = "18px";
-  notification.style.color = "#ffffff";
-  notification.style.borderRadius = "8px";
-  notification.style.border = "2px solid #666";
-  notification.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.4)";
+  notification.style.fontSize = "16px";
+  notification.style.color = "#535353ff";
   notification.style.zIndex = "2147483647";
   notification.style.opacity = "0";
   notification.style.transition = "opacity 0.3s ease-in-out";
