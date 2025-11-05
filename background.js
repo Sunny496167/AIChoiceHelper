@@ -116,7 +116,7 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
       
     case 'gemini':
       // Updated to use gemini-1.5-flash model with the latest API version
-      apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
+      apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
       headers = {
         'Content-Type': 'application/json'
       };
@@ -258,12 +258,12 @@ function showResult(result) {
   notification.style.transform = "translate(-50%, -50%)";
   notification.style.padding = "2px 3px";
   notification.style.background = "transparent";
-  notification.style.fontSize = "12px";
+  notification.style.fontSize = "32px";
   notification.style.fontWeight = "normal";
-  notification.style.color = "#dcdcdc";
+  notification.style.color = "#000000";
   notification.style.zIndex = "9999";
   notification.style.opacity = "0";
-  notification.style.transition = "opacity 0.3s ease-in-out";
+  notification.style.transition = "opacity 5s ease-in-out";
   notification.textContent = result;
   
   // Add notification to page
@@ -302,11 +302,11 @@ function showNotification(message) {
   notification.style.transform = "translate(-50%, -50%)";
   notification.style.padding = "5px 7px";
   notification.style.background = "transparent";
-  notification.style.fontSize = "4px";
-  notification.style.color = "#dcdcdc";
+  notification.style.fontSize = "16px";
+  notification.style.color = "#333";
   notification.style.zIndex = "9999";
   notification.style.opacity = "0";
-  notification.style.transition = "opacity 0.3s ease-in-out";
+  notification.style.transition = "opacity 5s ease-in-out";
   notification.textContent = message;
   
   // Add notification to page
