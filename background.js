@@ -115,7 +115,7 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
       break;
       
     case 'gemini':
-      // Updated to use gemini-1.5-flash model with the latest API version
+      // Updated to use gemini-2.5-flash model with increased token limit
       apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
       headers = {
         'Content-Type': 'application/json'
@@ -133,7 +133,7 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
           }
         ],
         generationConfig: {
-          maxOutputTokens: 50,
+          maxOutputTokens: 500,  // Increased from 50 to handle thinking tokens
           temperature: 0.2
         }
       };
@@ -206,9 +206,21 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
       if (provider === 'openai') {
         result = data.choices[0].message.content.trim();
       } else if (provider === 'gemini') {
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && 
-            data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-          result = data.candidates[0].content.parts[0].text.trim();
+        // Improved Gemini response handling
+        if (data.candidates && data.candidates[0]) {
+          const candidate = data.candidates[0];
+          const content = candidate.content;
+          const finishReason = candidate.finishReason;
+          
+          if (content && content.parts && content.parts[0] && content.parts[0].text) {
+            result = content.parts[0].text.trim();
+          } else if (finishReason === 'MAX_TOKENS') {
+            throw new Error('Response was truncated. The model needs more tokens to complete the answer.');
+          } else if (finishReason === 'SAFETY') {
+            throw new Error('Response blocked by safety filters.');
+          } else {
+            throw new Error('Gemini returned an empty response. Please try again.');
+          }
         } else {
           throw new Error('Unexpected Gemini API response format');
         }
@@ -227,7 +239,7 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
       chrome.scripting.executeScript({
         target: { tabId: tabId },
         function: showNotification,
-        args: [`Error parsing response: ${error.message}`]
+        args: [`Error: ${error.message}`]
       });
     }
   })
