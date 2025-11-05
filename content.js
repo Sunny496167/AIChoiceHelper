@@ -1,3 +1,4 @@
+// content.js
 // This script is injected into webpages
 // It handles the listening for text selection events
 

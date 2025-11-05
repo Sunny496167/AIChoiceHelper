@@ -44,7 +44,7 @@ function processSelectedText(selectedText, tabId) {
   }
   
   // Get settings from storage
-  chrome.storage.sync.get(['apiProvider', 'openaiKey', 'geminiKey', 'deepseekKey'], function(data) {
+  chrome.storage.sync.get(['apiProvider', 'openaiKey', 'geminiKey', 'deepseekKey', 'perplexityKey'], function(data) {
     const provider = data.apiProvider || 'openai';
     let apiKey = '';
     
@@ -58,6 +58,9 @@ function processSelectedText(selectedText, tabId) {
         break;
       case 'deepseek':
         apiKey = data.deepseekKey;
+        break;
+      case 'perplexity':
+        apiKey = data.perplexityKey;
         break;
       default:
         apiKey = data.openaiKey;
@@ -115,8 +118,8 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
       break;
       
     case 'gemini':
-      // Updated to use gemini-2.5-flash model with increased token limit
-      apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
+      // Use v1beta endpoint for gemini-1.5-flash
+      apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
       headers = {
         'Content-Type': 'application/json'
       };
@@ -133,7 +136,7 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
           }
         ],
         generationConfig: {
-          maxOutputTokens: 500,  // Increased from 50 to handle thinking tokens
+          maxOutputTokens: 500,
           temperature: 0.2
         }
       };
@@ -152,6 +155,23 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
           { role: 'user', content: prompt }
         ],
         max_tokens: 50
+      };
+      break;
+      
+    case 'perplexity':
+      apiUrl = 'https://api.perplexity.ai/chat/completions';
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      };
+      requestBody = {
+        model: 'sonar',  // Updated model name
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that answers multiple choice questions. Always respond with ONLY the letter and selected option, nothing else.' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 50,
+        temperature: 0.2
       };
       break;
   }
@@ -203,7 +223,7 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
     
     try {
       // Extract result based on API provider
-      if (provider === 'openai') {
+      if (provider === 'openai' || provider === 'deepseek' || provider === 'perplexity') {
         result = data.choices[0].message.content.trim();
       } else if (provider === 'gemini') {
         // Improved Gemini response handling
@@ -224,8 +244,6 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
         } else {
           throw new Error('Unexpected Gemini API response format');
         }
-      } else if (provider === 'deepseek') {
-        result = data.choices[0].message.content.trim();
       }
       
       // Display result on the webpage
@@ -268,14 +286,19 @@ function showResult(result) {
   notification.style.top = "50%";
   notification.style.left = "50%";
   notification.style.transform = "translate(-50%, -50%)";
-  notification.style.padding = "2px 3px";
-  notification.style.background = "transparent";
-  notification.style.fontSize = "32px";
-  notification.style.fontWeight = "normal";
-  notification.style.color = "#000000";
-  notification.style.zIndex = "9999";
+  notification.style.padding = "15px 25px";
+  notification.style.background = "rgba(0, 0, 0, 0.9)";
+  notification.style.fontSize = "48px";
+  notification.style.fontWeight = "bold";
+  notification.style.color = "#00ff00";
+  notification.style.borderRadius = "12px";
+  notification.style.border = "3px solid #00ff00";
+  notification.style.boxShadow = "0 8px 32px rgba(0, 255, 0, 0.3)";
+  notification.style.zIndex = "2147483647";
   notification.style.opacity = "0";
-  notification.style.transition = "opacity 5s ease-in-out";
+  notification.style.transition = "opacity 0.3s ease-in-out";
+  notification.style.fontFamily = "monospace";
+  notification.style.letterSpacing = "2px";
   notification.textContent = result;
   
   // Add notification to page
@@ -285,7 +308,7 @@ function showResult(result) {
   setTimeout(() => {
     notification.style.opacity = "1";
     
-    // Fade out and remove after 1 second
+    // Fade out and remove after 2 seconds
     setTimeout(() => {
       notification.style.opacity = "0";
       setTimeout(() => {
@@ -293,7 +316,7 @@ function showResult(result) {
           document.body.removeChild(notification);
         }
       }, 300);
-    }, 1000);
+    }, 2000);
   }, 10);
 }
 
@@ -312,13 +335,19 @@ function showNotification(message) {
   notification.style.top = "50%";
   notification.style.left = "50%";
   notification.style.transform = "translate(-50%, -50%)";
-  notification.style.padding = "5px 7px";
-  notification.style.background = "transparent";
-  notification.style.fontSize = "16px";
-  notification.style.color = "#333";
-  notification.style.zIndex = "9999";
+  notification.style.padding = "12px 20px";
+  notification.style.background = "rgba(0, 0, 0, 0.85)";
+  notification.style.fontSize = "18px";
+  notification.style.color = "#ffffff";
+  notification.style.borderRadius = "8px";
+  notification.style.border = "2px solid #666";
+  notification.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.4)";
+  notification.style.zIndex = "2147483647";
   notification.style.opacity = "0";
-  notification.style.transition = "opacity 5s ease-in-out";
+  notification.style.transition = "opacity 0.3s ease-in-out";
+  notification.style.fontFamily = "Arial, sans-serif";
+  notification.style.maxWidth = "400px";
+  notification.style.textAlign = "center";
   notification.textContent = message;
   
   // Add notification to page
