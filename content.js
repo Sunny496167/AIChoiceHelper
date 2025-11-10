@@ -29,7 +29,7 @@ document.addEventListener('mouseup', function(event) {
   // Uncomment this code if you want the extension to automatically process
   // selected text that appears to be a multiple choice question
   
-  /*
+  
   if (selectedText && isLikelyMultipleChoice(selectedText)) {
     // Notify background script to process the selection
     chrome.runtime.sendMessage({
@@ -37,7 +37,7 @@ document.addEventListener('mouseup', function(event) {
       text: selectedText
     });
   }
-  */
+  
 });
 
 // Helper function to detect if text is likely a multiple choice question
