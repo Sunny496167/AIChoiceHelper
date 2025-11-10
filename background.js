@@ -136,7 +136,7 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
           }
         ],
         generationConfig: {
-          maxOutputTokens: 1000,
+          maxOutputTokens: 1500,
           temperature: 0.2
         }
       };

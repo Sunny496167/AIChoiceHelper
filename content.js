@@ -25,11 +25,6 @@ document.addEventListener('mouseup', function(event) {
   const selection = window.getSelection();
   const selectedText = selection.toString().trim();
   
-  // Optional: Auto-detect multiple choice questions
-  // Uncomment this code if you want the extension to automatically process
-  // selected text that appears to be a multiple choice question
-  
-  
   if (selectedText && isLikelyMultipleChoice(selectedText)) {
     // Notify background script to process the selection
     chrome.runtime.sendMessage({
