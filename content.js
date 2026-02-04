@@ -8,12 +8,10 @@
   style.textContent = `
     ::selection {
       background-color: #dcdcdc2a !important;
-      
     }
     
     ::-moz-selection {
       background-color: #dcdcdc2a !important;
-      
     }
   `;
   document.head.appendChild(style);
@@ -32,11 +30,9 @@ document.addEventListener('mouseup', function(event) {
       text: selectedText
     });
   }
-  
 });
 
 // Helper function to detect if text is likely a multiple choice question
-// This is just a basic implementation - you may want to enhance it
 function isLikelyMultipleChoice(text) {
   // Look for patterns like "1. Option" or "a) Option" or "A. Option"
   const mcPatterns = [
@@ -52,7 +48,12 @@ function isLikelyMultipleChoice(text) {
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  console.log('Content script received message:', request); // Debug log
+  
   if (request.action === 'getSelectedText') {
-    sendResponse({ text: window.getSelection().toString() });
+    const selectedText = window.getSelection().toString();
+    console.log('Sending selected text:', selectedText); // Debug log
+    sendResponse({ text: selectedText });
+    return true; // Keep the message channel open
   }
 });

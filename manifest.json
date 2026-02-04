@@ -34,7 +34,7 @@
     "commands": {
       "process-selection": {
         "suggested_key": {
-          "default": "Ctrl+Q",
+          "default": "Ctrl+Shift+Q",
           "mac": "Command+E"
         },
         "description": "Process selected text with AI"

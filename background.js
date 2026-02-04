@@ -14,34 +14,97 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
   }
 });
 
-// Listen for keyboard shortcut
-chrome.commands.onCommand.addListener(async function(command) {
-  if (command === "process-selection") {
-    // Get the active tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    // Execute script to get selected text
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      function: getSelectedText
-    }, function(selections) {
-      if (selections && selections[0] && selections[0].result) {
-        processSelectedText(selections[0].result, tab.id);
-      }
-    });
+// Listen for messages from content script
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.action === 'processSelection' && request.text) {
+    processSelectedText(request.text, sender.tab.id);
   }
 });
 
-// Function to get selected text from the page
-function getSelectedText() {
-  return window.getSelection().toString();
-}
+// Listen for keyboard shortcut
+chrome.commands.onCommand.addListener(async function(command) {
+  console.log('Command received:', command);
+  
+  if (command === "process-selection") {
+    try {
+      // Get the active tab
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      
+      if (!tab || !tab.id) {
+        console.error('No active tab found');
+        return;
+      }
+      
+      const tabId = tab.id;
+      console.log('Processing selection for tab:', tabId);
+      
+      // Check if we can inject scripts into this page
+      if (tab.url && (tab.url.startsWith('chrome://') || 
+                      tab.url.startsWith('edge://') || 
+                      tab.url.startsWith('about:') ||
+                      tab.url.startsWith('chrome-extension://'))) {
+        console.error('Cannot run on this type of page:', tab.url);
+        return;
+      }
+      
+      // Try to get selected text using executeScript as fallback
+      try {
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          func: () => window.getSelection().toString()
+        });
+        
+        if (results && results[0] && results[0].result) {
+          const selectedText = results[0].result.trim();
+          console.log('Selected text:', selectedText);
+          
+          if (selectedText) {
+            processSelectedText(selectedText, tabId);
+          } else {
+            console.log('No text selected');
+            // Show a notification to the user
+            await chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              func: (msg) => {
+                const notification = document.createElement("div");
+                notification.style.cssText = `
+                  position: fixed;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  padding: 15px 25px;
+                  background: #333;
+                  color: white;
+                  border-radius: 5px;
+                  font-family: Arial, sans-serif;
+                  z-index: 2147483647;
+                  font-size: 14px;
+                `;
+                notification.textContent = msg;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 2000);
+              },
+              args: ['Please select some text first']
+            });
+          }
+        }
+      } catch (executeError) {
+        console.error('Execute script error:', executeError);
+      }
+      
+    } catch (error) {
+      console.error('Command handler error:', error);
+    }
+  }
+});
 
 // Process the selected text with AI
 function processSelectedText(selectedText, tabId) {
   if (!selectedText || selectedText.trim() === "") {
     return;
   }
+  
+  console.log('Processing text:', selectedText);
   
   // Get settings from storage
   chrome.storage.sync.get(['apiProvider', 'openaiKey', 'geminiKey', 'deepseekKey', 'perplexityKey'], function(data) {
@@ -165,7 +228,7 @@ function callAIAPI(provider, apiKey, prompt, tabId) {
         'Authorization': `Bearer ${apiKey}`
       };
       requestBody = {
-        model: 'sonar',  // Updated model name
+        model: 'sonar',
         messages: [
           { role: 'system', content: 'You are a helpful assistant that answers multiple choice questions. Always respond with ONLY the letter and selected option, nothing else.' },
           { role: 'user', content: prompt }
