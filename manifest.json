@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "AI Choice Helper",
     "version": "1.0",
-    "description": "Get AI-powered answers for multiple choice questions",
+    "description": "Get AI-powered answers for MCQs, explanations, short/long answers, and word meanings with customizable display",
     "permissions": [
       "storage",
       "contextMenus",

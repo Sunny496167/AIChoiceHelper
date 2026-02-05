@@ -105,6 +105,49 @@
         </div>
       </div>
       
+      <div class="divider"></div>
+      
+      <div class="section">
+        <div class="section-title">Display Settings</div>
+        
+        <div class="form-group">
+          <label for="notification-position">Notification Position</label>
+          <select id="notification-position">
+            <option value="center">Center</option>
+            <option value="top-left">Top Left</option>
+            <option value="top-right">Top Right</option>
+            <option value="bottom-left">Bottom Left</option>
+            <option value="bottom-right">Bottom Right</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="notification-opacity">Notification Opacity: <span id="opacity-value">0.9</span></label>
+          <input type="range" id="notification-opacity" min="0.1" max="1" step="0.1" value="0.9">
+        </div>
+        
+        <div class="form-group">
+          <label for="display-duration">Display Duration: <span id="duration-value">3</span> seconds</label>
+          <input type="range" id="display-duration" min="1" max="10" step="1" value="3">
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="section">
+        <div class="section-title">Question Type</div>
+        <div class="form-group">
+          <label for="question-type">Select the type of question</label>
+          <select id="question-type">
+            <option value="mcq">Multiple Choice Question (MCQ)</option>
+            <option value="explain">Explain</option>
+            <option value="short-answer">Short Answer (30 words)</option>
+            <option value="long-answer">Long Answer (70 words)</option>
+            <option value="word-meaning">Word Meaning & Explanation</option>
+          </select>
+        </div>
+      </div>
+      
       <button id="save-button" class="button">💾 Save Settings</button>
       <div id="status" class="status success">✓ Settings saved successfully!</div>
     </div>
