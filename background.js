@@ -80,6 +80,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
+// Listen for coding problem requests from content script
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.action === 'solveCodingProblem') {
+    console.log('[Coding Assistant] Received problem request from:', sender.tab?.id);
+    handleCodingProblem(request, sender.tab?.id, sendResponse);
+    return true; // Keep message channel open for async response
+  }
+});
+
 // Listen for keyboard shortcut
 chrome.commands.onCommand.addListener(async function (command) {
   console.log('Command received:', command);
@@ -572,4 +581,265 @@ function showNotificationOnPage(tabId, message, settings = DEFAULT_SETTINGS) {
     },
     args: [message, settings]
   });
+}
+
+// ============================================================================
+// CODING ASSISTANT FEATURE
+// ============================================================================
+
+/**
+ * Handle coding problem requests from content script
+ * @param {Object} request - Request object with problemText and language
+ * @param {number} tabId - Tab ID that sent the request
+ * @param {Function} sendResponse - Callback to send response
+ */
+function handleCodingProblem(request, tabId, sendResponse) {
+  const { problemText, language, platform } = request;
+
+  console.log(`[Coding Assistant] Processing ${platform} problem with language: ${language}`);
+
+  if (!problemText) {
+    sendResponse({ success: false, error: 'No problem text provided' });
+    return;
+  }
+
+  // Get settings from storage
+  chrome.storage.sync.get(
+    ['apiProvider', 'openaiKey', 'geminiKey', 'deepseekKey', 'perplexityKey'],
+    function (data) {
+      const settings = { ...DEFAULT_SETTINGS, ...data };
+      const provider = settings.apiProvider;
+
+      let apiKey = '';
+
+      // Get the appropriate API key
+      switch (provider) {
+        case 'openai':
+          apiKey = settings.openaiKey;
+          break;
+        case 'gemini':
+          apiKey = settings.geminiKey;
+          break;
+        case 'deepseek':
+          apiKey = settings.deepseekKey;
+          break;
+        case 'perplexity':
+          apiKey = settings.perplexityKey;
+          break;
+        default:
+          apiKey = settings.openaiKey;
+      }
+
+      if (!apiKey) {
+        sendResponse({
+          success: false,
+          error: `Please set ${provider} API key in extension settings`
+        });
+        return;
+      }
+
+      // Build prompt based on language selection
+      const prompt = buildCodingPrompt(problemText, language);
+      const systemMessage = getCodingSystemMessage(language);
+      const maxTokens = language === 'explain' ? 800 : 1200;
+
+      // Call AI API
+      callCodingAI(provider, apiKey, prompt, systemMessage, maxTokens, sendResponse);
+    }
+  );
+}
+
+/**
+ * Build prompt for coding problem based on language
+ * @param {string} problemText - The problem statement
+ * @param {string} language - Selected language or 'explain'
+ * @returns {string} Formatted prompt
+ */
+function buildCodingPrompt(problemText, language) {
+  const languageMap = {
+    'cpp': 'C++',
+    'java': 'Java',
+    'python': 'Python',
+    'javascript': 'JavaScript'
+  };
+
+  let prompt = `You are an expert competitive programmer. Analyze the following coding problem:\n\n${problemText}\n\n`;
+
+  if (language === 'explain') {
+    prompt += `Please provide a comprehensive explanation including:
+1. **Problem Understanding**: Explain what the problem is asking for in simple terms
+2. **Optimal Approach**: Describe the best algorithm or strategy to solve this
+3. **Key Concepts**: What programming concepts, data structures, or algorithms are needed?
+4. **Step-by-Step Logic**: Break down the solution logic step by step
+5. **Time & Space Complexity**: Analyze the complexity of the optimal solution
+
+Format your response clearly with headers and bullet points where appropriate.`;
+  } else {
+    const lang = languageMap[language];
+    prompt += `Please provide:
+1. **Problem Understanding**: Brief explanation of what the problem asks
+2. **Optimal Approach**: The best strategy to solve this problem
+3. **Key Concepts**: Data structures and algorithms used
+4. **Time & Space Complexity**: Big O analysis
+5. **${lang} Solution**: Provide clean, optimized, well-commented ${lang} code that solves this problem
+
+For the code:
+- Use best practices and idiomatic ${lang} style
+- Add clear comments explaining the logic
+- Make it production-ready and readable
+- Format it properly with proper indentation
+
+Format the code in markdown code blocks using \`\`\`${language}.`;
+  }
+
+  return prompt;
+}
+
+/**
+ * Get system message for coding assistant
+ * @param {string} language - Selected language
+ * @returns {string} System message
+ */
+function getCodingSystemMessage(language) {
+  if (language === 'explain') {
+    return 'You are an expert programming tutor who explains coding problems clearly and comprehensively. Break down complex concepts into understandable parts.';
+  } else {
+    return 'You are an expert competitive programmer and coding mentor. Provide clear explanations and write clean, optimized, well-documented code following best practices.';
+  }
+}
+
+/**
+ * Call AI API for coding problem
+ * @param {string} provider - API provider
+ * @param {string} apiKey - API key
+ * @param {string} prompt - User prompt
+ * @param {string} systemMessage - System message
+ * @param {number} maxTokens - Max tokens for response
+ * @param {Function} sendResponse - Callback function
+ */
+function callCodingAI(provider, apiKey, prompt, systemMessage, maxTokens, sendResponse) {
+  let apiUrl = '';
+  let headers = {};
+  let requestBody = {};
+
+  console.log(`[Coding Assistant] Calling ${provider} API with max tokens: ${maxTokens}`);
+
+  switch (provider) {
+    case 'openai':
+      apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      };
+      requestBody = {
+        model: 'openai/chatgpt-4o-latest',
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.3
+      };
+      break;
+
+    case 'gemini':
+      apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+      headers = {
+        'Content-Type': 'application/json'
+      };
+      apiUrl += `?key=${apiKey}`;
+      requestBody = {
+        contents: [
+          {
+            parts: [
+              {
+                text: `${systemMessage}\n\n${prompt}`
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          maxOutputTokens: maxTokens * 3,
+          temperature: 0.3
+        }
+      };
+      break;
+
+    case 'deepseek':
+      apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      };
+      requestBody = {
+        model: 'deepseek/deepseek-r1:free',
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.3
+      };
+      break;
+
+    case 'perplexity':
+      apiUrl = 'https://api.perplexity.ai/chat/completions';
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      };
+      requestBody = {
+        model: 'sonar',
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.3
+      };
+      break;
+  }
+
+  // Make API request
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestBody)
+  })
+    .then(response => {
+      console.log(`[Coding Assistant] ${provider} API Response Status: ${response.status}`);
+
+      if (!response.ok) {
+        return response.text().then(text => {
+          console.error(`[Coding Assistant] API Error Response: ${text}`);
+          let errorMessage = '';
+
+          if (response.status === 402 && provider === 'deepseek') {
+            errorMessage = "DeepSeek account has insufficient balance. Please add credits.";
+          } else if (response.status === 401) {
+            errorMessage = `Invalid ${provider} API key. Please check your settings.`;
+          } else if (response.status === 429) {
+            errorMessage = `${provider} rate limit exceeded. Please wait and try again.`;
+          } else if (response.status >= 500) {
+            errorMessage = `${provider} server error. Please try again later.`;
+          } else {
+            errorMessage = `${provider} API error: ${response.status}`;
+          }
+
+          throw new Error(errorMessage);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('[Coding Assistant] API Response received');
+
+      const result = extractResponse(provider, data);
+
+      sendResponse({ success: true, result: result });
+    })
+    .catch(error => {
+      console.error('[Coding Assistant] API Request Error:', error);
+      sendResponse({ success: false, error: error.message });
+    });
 }

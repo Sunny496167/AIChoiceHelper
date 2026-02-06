@@ -1,8 +1,22 @@
 # AI Choice Helper 🤖✨
 
-A powerful Chrome extension that provides AI-powered answers for various question types with customizable display settings.
+A powerful Chrome extension that provides AI-powered answers for various question types with customizable display settings, plus an integrated coding assistant for LeetCode and GeeksforGeeks.
 
 ## Features
+
+### 🤖 AI Coding Assistant (NEW!)
+- **Platform Support**: Works on LeetCode and GeeksforGeeks problem pages
+- **Floating Button**: Click "🤖 Explain Problem" to open sidebar
+- **Language Options**: 
+  - Explain Only (no code)
+  - C++, Java, Python, JavaScript (explanation + code)
+- **Comprehensive Analysis**:
+  - Problem understanding
+  - Optimal approach & algorithms
+  - Time & space complexity
+  - Step-by-step logic
+  - Clean, optimized code
+- **One-Click Copy**: Copy code blocks with a single click
 
 ### 🎯 Multiple Question Types
 - **MCQ (Multiple Choice)** - Get the best answer with explanation
@@ -50,16 +64,29 @@ A powerful Chrome extension that provides AI-powered answers for various questio
 
 ## Usage
 
-### Method 1: Keyboard Shortcut
+### For Regular Questions (MCQ, Explanations, etc.)
+
+#### Method 1: Keyboard Shortcut
 1. Select text on any webpage
-2. Press `Ctrl + Q` (Windows/Linux) or `Cmd + E` (Mac)
+2. Press `Ctrl + Shift + Q` (Windows/Linux) or `Cmd + E` (Mac)
 3. AI answer appears as notification
 
-### Method 2: Context Menu
+#### Method 2: Context Menu
 1. Select text on any webpage
 2. Right-click the selection
 3. Click "Get AI answer"
 4. AI answer appears as notification
+
+### For Coding Problems (LeetCode, GeeksforGeeks)
+
+1. **Navigate** to a problem page on LeetCode or GeeksforGeeks
+2. **Look** for the floating "🤖 Explain Problem" button at bottom-right
+3. **Click** the button to open the sidebar
+4. **Select** your preferred output (Explain Only, or a programming language)
+5. **Click** "Generate" button
+6. **Review** the AI-generated explanation and code
+7. **Copy** code using the copy button above code blocks
+
 
 ## API Keys
 
@@ -87,9 +114,9 @@ AI-Choice-Helper/
 ├── popup.html            # Settings interface
 ├── popup.css             # UI styling
 ├── popup.js              # Settings management
-├── background.js         # Core logic & API calls
-├── content.js            # Page integration
-├── utils/                # Utility modules
+├── background.js         # Core logic, API calls & coding assistant
+├── content.js            # Page integration, text selection & coding UI
+├── utils/                # Utility modules (for reference)
 │   ├── constants.js
 │   ├── storage.js
 │   ├── errorHandler.js
@@ -97,6 +124,8 @@ AI-Choice-Helper/
 │   └── apiHandler.js
 └── image/                # Extension icons
 ```
+
+**Note**: The coding assistant UI (floating button and sidebar) is dynamically injected by `content.js` only on supported coding platforms.
 
 ## Troubleshooting
 
