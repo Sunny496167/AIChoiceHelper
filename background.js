@@ -1,6 +1,8 @@
 // background.js - Enhanced with modular structure and new features
 // This file handles the core extension logic and AI API calls
 
+import { getActiveApiKey, identifyBuiltinKeyId, getSettings } from './utils/apiManager.js';
+
 // ============================================================================
 // CONSTANTS AND CONFIGURATION
 // ============================================================================
@@ -151,64 +153,22 @@ chrome.commands.onCommand.addListener(async function (command) {
  * @param {string} selectedText - The text selected by user
  * @param {number} tabId - The tab ID where text was selected
  */
-function processSelectedText(selectedText, tabId) {
+async function processSelectedText(selectedText, tabId) {
   if (!selectedText || selectedText.trim() === "") {
     return;
   }
 
   console.log('Processing text:', selectedText);
 
-  // Get settings from storage
-  chrome.storage.sync.get(
-    [
-      'apiProvider',
-      'groqKey',
-      'geminiKey',
-      'deepseekKey',
-      'perplexityKey',
-      'questionType',
-      'notificationPosition',
-      'notificationOpacity',
-      'displayDuration'
-    ],
-    function (data) {
-      // Apply defaults
-      const settings = { ...DEFAULT_SETTINGS, ...data };
-      const provider = settings.apiProvider;
-      const questionType = settings.questionType;
+  const settings = await getSettings();
+  const provider = settings.apiProvider;
+  const questionType = settings.questionType;
 
-      let apiKey = '';
+  // Show loading notification
+  showNotificationOnPage(tabId, "...", settings);
 
-      // Get the appropriate API key
-      switch (provider) {
-        case 'groq':
-          apiKey = settings.groqKey;
-          break;
-        case 'gemini':
-          apiKey = settings.geminiKey;
-          break;
-        case 'deepseek':
-          apiKey = settings.deepseekKey;
-          break;
-        case 'perplexity':
-          apiKey = settings.perplexityKey;
-          break;
-        default:
-          apiKey = settings.groqKey;
-      }
-
-      if (!apiKey) {
-        showNotificationOnPage(tabId, `Please set ${provider} API key in extension settings`, settings);
-        return;
-      }
-
-      // Show loading notification
-      showNotificationOnPage(tabId, "...", settings);
-
-      // Call the appropriate API
-      callAIAPI(provider, apiKey, selectedText, questionType, settings, tabId);
-    }
-  );
+  // Call the appropriate API
+  callAIAPI(provider, selectedText, questionType, settings, tabId);
 }
 
 /**
@@ -220,19 +180,32 @@ function processSelectedText(selectedText, tabId) {
  * @param {Object} settings - User settings
  * @param {number} tabId - Tab ID for displaying results
  */
-function callAIAPI(provider, apiKey, text, questionType, settings, tabId) {
+async function callAIAPI(provider, text, questionType, settings, tabId) {
   const config = QUESTION_TYPE_CONFIG[questionType];
   const prompt = config.prompt(text);
   const systemMessage = config.systemMessage;
   const maxTokens = config.maxTokens;
 
-  let apiUrl = '';
-  let headers = {};
-  let requestBody = {};
-
   console.log(`Calling ${provider} API for question type: ${questionType}`);
 
-  switch (provider) {
+  const failedKeys = new Set();
+  let success = false;
+  let result = null;
+
+  while (!success) {
+    let apiKey;
+    try {
+      apiKey = await getActiveApiKey(settings, failedKeys);
+    } catch (error) {
+      showNotificationOnPage(tabId, error.message, settings);
+      return;
+    }
+
+    let apiUrl = '';
+    let headers = {};
+    let requestBody = {};
+
+    switch (provider) {
     case 'groq':
       apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
       headers = {
@@ -289,13 +262,13 @@ function callAIAPI(provider, apiKey, text, questionType, settings, tabId) {
       break;
 
     case 'perplexity':
-      apiUrl = 'https://api.perplexity.ai/chat/completions';
+      apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
       headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       };
       requestBody = {
-        model: 'sonar',
+        model: 'perplexity/llama-3.1-sonar-small-128k-chat',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
@@ -309,48 +282,59 @@ function callAIAPI(provider, apiKey, text, questionType, settings, tabId) {
   console.log(`API URL: ${apiUrl.split('?')[0]}`);
 
   // Make API request
-  fetch(apiUrl, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(requestBody)
-  })
-    .then(response => {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody)
+      });
+
       console.log(`${provider} API Response Status: ${response.status}`);
 
       if (!response.ok) {
-        return response.text().then(text => {
-          console.error(`API Error Response: ${text}`);
-          let errorMessage = '';
+        const text = await response.text();
+        console.error(`API Error Response: ${text}`);
 
-          if (response.status === 402 && provider === 'deepseek') {
-            errorMessage = "DeepSeek account has insufficient balance. Please add credits to your account.";
-          } else if (response.status === 401) {
-            errorMessage = `Invalid ${provider} API key. Please check your settings.`;
-          } else if (response.status === 429) {
-            errorMessage = `${provider} rate limit exceeded. Please wait and try again.`;
-          } else if (response.status >= 500) {
-            errorMessage = `${provider} server error. Please try again later.`;
-          } else {
-            errorMessage = `${provider} API error: ${response.status}`;
+        if (response.status === 401 || response.status === 429 || response.status === 400) {
+          if (settings.apiMode === 'builtin' && settings.autoSwitchEnabled) {
+            const failedId = identifyBuiltinKeyId(apiKey);
+            if (failedId) {
+              failedKeys.add(failedId);
+              console.warn(`Key ${failedId} failed with ${response.status}. Trying next key...`);
+              continue; // Retry loop
+            }
           }
+        }
 
-          throw new Error(errorMessage);
-        });
+        let errorMessage = '';
+        if (response.status === 402 && provider === 'deepseek') {
+          errorMessage = "DeepSeek account has insufficient balance. Please add credits to your account.";
+        } else if (response.status === 401) {
+          errorMessage = `Invalid ${provider} API key. Please check your settings.`;
+        } else if (response.status === 429) {
+          errorMessage = `${provider} rate limit exceeded. Please wait and try again.`;
+        } else if (response.status >= 500) {
+          errorMessage = `${provider} server error. Please try again later.`;
+        } else {
+          errorMessage = `${provider} API error: ${response.status}`;
+        }
+        throw new Error(errorMessage);
       }
-      return response.json();
-    })
-    .then(data => {
+
+      const data = await response.json();
       console.log('API Response Data:', JSON.stringify(data));
 
-      const result = extractResponse(provider, data);
-
+      result = extractResponse(provider, data);
+      success = true;
+      
       // Display result with settings
       showResultOnPage(tabId, result, settings);
-    })
-    .catch(error => {
+    } catch (error) {
       console.error('API Request Error:', error);
       showNotificationOnPage(tabId, error.message, settings);
-    });
+      return;
+    }
+  }
 }
 
 /**
@@ -593,7 +577,7 @@ function showNotificationOnPage(tabId, message, settings = DEFAULT_SETTINGS) {
  * @param {number} tabId - Tab ID that sent the request
  * @param {Function} sendResponse - Callback to send response
  */
-function handleCodingProblem(request, tabId, sendResponse) {
+async function handleCodingProblem(request, tabId, sendResponse) {
   const { problemText, language, platform } = request;
 
   console.log(`[Coding Assistant] Processing ${platform} problem with language: ${language}`);
@@ -603,50 +587,16 @@ function handleCodingProblem(request, tabId, sendResponse) {
     return;
   }
 
-  // Get settings from storage
-  chrome.storage.sync.get(
-    ['apiProvider', 'groqKey', 'geminiKey', 'deepseekKey', 'perplexityKey'],
-    function (data) {
-      const settings = { ...DEFAULT_SETTINGS, ...data };
-      const provider = settings.apiProvider;
+  const settings = await getSettings();
+  const provider = settings.apiProvider;
 
-      let apiKey = '';
+  // Build prompt based on language selection
+  const prompt = buildCodingPrompt(problemText, language);
+  const systemMessage = getCodingSystemMessage(language);
+  const maxTokens = language === 'explain' ? 800 : 1200;
 
-      // Get the appropriate API key
-      switch (provider) {
-        case 'groq':
-          apiKey = settings.groqKey;
-          break;
-        case 'gemini':
-          apiKey = settings.geminiKey;
-          break;
-        case 'deepseek':
-          apiKey = settings.deepseekKey;
-          break;
-        case 'perplexity':
-          apiKey = settings.perplexityKey;
-          break;
-        default:
-          apiKey = settings.groqKey;
-      }
-
-      if (!apiKey) {
-        sendResponse({
-          success: false,
-          error: `Please set ${provider} API key in extension settings`
-        });
-        return;
-      }
-
-      // Build prompt based on language selection
-      const prompt = buildCodingPrompt(problemText, language);
-      const systemMessage = getCodingSystemMessage(language);
-      const maxTokens = language === 'explain' ? 800 : 1200;
-
-      // Call AI API
-      callCodingAI(provider, apiKey, prompt, systemMessage, maxTokens, sendResponse);
-    }
-  );
+  // Call AI API
+  callCodingAI(provider, prompt, systemMessage, maxTokens, sendResponse, settings);
 }
 
 /**
@@ -717,14 +667,27 @@ function getCodingSystemMessage(language) {
  * @param {number} maxTokens - Max tokens for response
  * @param {Function} sendResponse - Callback function
  */
-function callCodingAI(provider, apiKey, prompt, systemMessage, maxTokens, sendResponse) {
-  let apiUrl = '';
-  let headers = {};
-  let requestBody = {};
-
+async function callCodingAI(provider, prompt, systemMessage, maxTokens, sendResponse, settings) {
   console.log(`[Coding Assistant] Calling ${provider} API with max tokens: ${maxTokens}`);
 
-  switch (provider) {
+  const failedKeys = new Set();
+  let success = false;
+  let result = null;
+
+  while (!success) {
+    let apiKey;
+    try {
+      apiKey = await getActiveApiKey(settings, failedKeys);
+    } catch (error) {
+      sendResponse({ success: false, error: error.message });
+      return;
+    }
+
+    let apiUrl = '';
+    let headers = {};
+    let requestBody = {};
+
+    switch (provider) {
     case 'groq':
       apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
       headers = {
@@ -783,13 +746,13 @@ function callCodingAI(provider, apiKey, prompt, systemMessage, maxTokens, sendRe
       break;
 
     case 'perplexity':
-      apiUrl = 'https://api.perplexity.ai/chat/completions';
+      apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
       headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       };
       requestBody = {
-        model: 'sonar',
+        model: 'perplexity/llama-3.1-sonar-small-128k-chat',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
@@ -801,45 +764,56 @@ function callCodingAI(provider, apiKey, prompt, systemMessage, maxTokens, sendRe
   }
 
   // Make API request
-  fetch(apiUrl, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(requestBody)
-  })
-    .then(response => {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody)
+      });
+
       console.log(`[Coding Assistant] ${provider} API Response Status: ${response.status}`);
 
       if (!response.ok) {
-        return response.text().then(text => {
-          console.error(`[Coding Assistant] API Error Response: ${text}`);
-          let errorMessage = '';
+        const text = await response.text();
+        console.error(`[Coding Assistant] API Error Response: ${text}`);
 
-          if (response.status === 402 && provider === 'deepseek') {
-            errorMessage = "DeepSeek account has insufficient balance. Please add credits.";
-          } else if (response.status === 401) {
-            errorMessage = `Invalid ${provider} API key. Please check your settings.`;
-          } else if (response.status === 429) {
-            errorMessage = `${provider} rate limit exceeded. Please wait and try again.`;
-          } else if (response.status >= 500) {
-            errorMessage = `${provider} server error. Please try again later.`;
-          } else {
-            errorMessage = `${provider} API error: ${response.status}`;
+        if (response.status === 401 || response.status === 429 || response.status === 400) {
+          if (settings.apiMode === 'builtin' && settings.autoSwitchEnabled) {
+            const failedId = identifyBuiltinKeyId(apiKey);
+            if (failedId) {
+              failedKeys.add(failedId);
+              console.warn(`[Coding Assistant] Key ${failedId} failed with ${response.status}. Trying next...`);
+              continue; // Retry loop
+            }
           }
+        }
 
-          throw new Error(errorMessage);
-        });
+        let errorMessage = '';
+        if (response.status === 402 && provider === 'deepseek') {
+          errorMessage = "DeepSeek account has insufficient balance. Please add credits.";
+        } else if (response.status === 401) {
+          errorMessage = `Invalid ${provider} API key. Please check your settings.`;
+        } else if (response.status === 429) {
+          errorMessage = `${provider} rate limit exceeded. Please wait and try again.`;
+        } else if (response.status >= 500) {
+          errorMessage = `${provider} server error. Please try again later.`;
+        } else {
+          errorMessage = `${provider} API error: ${response.status}`;
+        }
+        throw new Error(errorMessage);
       }
-      return response.json();
-    })
-    .then(data => {
+
+      const data = await response.json();
       console.log('[Coding Assistant] API Response received');
 
-      const result = extractResponse(provider, data);
+      result = extractResponse(provider, data);
+      success = true;
 
       sendResponse({ success: true, result: result });
-    })
-    .catch(error => {
+    } catch (error) {
       console.error('[Coding Assistant] API Request Error:', error);
       sendResponse({ success: false, error: error.message });
-    });
+      return;
+    }
+  }
 }

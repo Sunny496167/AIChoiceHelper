@@ -3,14 +3,47 @@
 // Default settings
 export const DEFAULT_SETTINGS = {
   apiProvider: 'groq',
-  notificationOpacity: 0.9,
-  notificationPosition: 'center',
-  questionType: 'mcq',
-  displayDuration: 3,
+  apiMode: 'builtin',
+  
+  // Selected built-in keys per provider
+  selectedBuiltinGroq: 'groq_primary',
+  selectedBuiltinGemini: 'gemini_primary',
+  selectedBuiltinDeepseek: 'ds_1',
+  selectedBuiltinPerplexity: 'pplx_1',
+  
+  // Custom API keys per provider
   groqKey: '',
   geminiKey: '',
   deepseekKey: '',
-  perplexityKey: ''
+  perplexityKey: '',
+  
+  autoSwitchEnabled: true,
+  notificationOpacity: 0.9,
+  notificationPosition: 'center',
+  questionType: 'mcq',
+  displayDuration: 3
+};
+
+// Built-in API Keys Management (Grouped by Provider)
+export const BUILTIN_KEYS = {
+  groq: [
+    { id: "groq_primary", name: "Groq Primary", apiKey: "", enabled: true, priority: 1 },
+    { id: "groq_backup", name: "Groq Backup", apiKey: "", enabled: true, priority: 2 },
+    { id: "groq_premium", name: "Groq Premium", apiKey: "", enabled: true, priority: 3 }
+  ],
+  gemini: [
+    { id: "gemini_primary", name: "Gemini Primary", apiKey: "", enabled: true, priority: 1 },
+    { id: "gemini_backup", name: "Gemini Backup", apiKey: "", enabled: true, priority: 2 },
+    { id: "gemini_premium", name: "Gemini Premium", apiKey: "", enabled: true, priority: 3 }
+  ],
+  deepseek: [
+    { id: "ds_1", name: "OpenRouter 1 (DeepSeek)", apiKey: "", enabled: true, priority: 1 },
+    { id: "ds_2", name: "OpenRouter 2 (DeepSeek)", apiKey: "", enabled: true, priority: 2 }
+  ],
+  perplexity: [
+    { id: "pplx_1", name: "OpenRouter 1 (Perplexity)", apiKey: "", enabled: true, priority: 1 },
+    { id: "pplx_2", name: "OpenRouter 2 (Perplexity)", apiKey: "", enabled: true, priority: 2 }
+  ]
 };
 
 // Notification positions

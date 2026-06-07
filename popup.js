@@ -1,6 +1,8 @@
 // popup.js - Enhanced with new features
 // This file handles the popup UI and settings management
 
+import { BUILTIN_KEYS, DEFAULT_SETTINGS } from './utils/constants.js';
+
 document.addEventListener('DOMContentLoaded', function () {
   // Password visibility toggle
   const toggleIcons = document.querySelectorAll('.toggle-password');
@@ -32,10 +34,19 @@ document.addEventListener('DOMContentLoaded', function () {
   // Get all form elements
   const elements = {
     apiProvider: document.getElementById('api-provider'),
-    groqKey: document.getElementById('groq-key'),
-    geminiKey: document.getElementById('gemini-key'),
-    deepseekKey: document.getElementById('deepseek-key'),
-    perplexityKey: document.getElementById('perplexity-key'),
+    
+    // API Source elements
+    modeBuiltin: document.getElementById('mode-builtin'),
+    modeCustom: document.getElementById('mode-custom'),
+    builtinSection: document.getElementById('builtin-section'),
+    customSection: document.getElementById('custom-section'),
+    builtinKeySelector: document.getElementById('builtin-key-selector'),
+    autoSwitchEnabled: document.getElementById('auto-switch-enabled'),
+    builtinAdminList: document.getElementById('builtin-admin-list'),
+    customApiKey: document.getElementById('custom-api-key'),
+    customApiKeyLabel: document.querySelector('label[for="custom-api-key"]'),
+
+    // Display elements
     notificationPosition: document.getElementById('notification-position'),
     notificationOpacity: document.getElementById('notification-opacity'),
     displayDuration: document.getElementById('display-duration'),
@@ -46,59 +57,134 @@ document.addEventListener('DOMContentLoaded', function () {
     durationValue: document.getElementById('duration-value')
   };
 
-  // Default settings
-  const defaultSettings = {
-    apiProvider: 'groq',
-    notificationOpacity: 0.9,
-    notificationPosition: 'center',
-    questionType: 'mcq',
-    displayDuration: 3
-  };
+  let settingsState = { ...DEFAULT_SETTINGS };
+  let currentDisabledKeys = [];
+
+  // Toggle sections based on mode & dynamically update based on selected AI Provider
+  function updateUI() {
+    const provider = elements.apiProvider.value; // groq, gemini, deepseek, perplexity
+    const providerName = elements.apiProvider.options[elements.apiProvider.selectedIndex].text.split(' ')[0]; // E.g., "Groq", "Gemini"
+
+    if (elements.modeBuiltin.checked) {
+      elements.builtinSection.style.display = 'block';
+      elements.customSection.style.display = 'none';
+      renderBuiltinKeys(provider);
+    } else {
+      elements.builtinSection.style.display = 'none';
+      elements.customSection.style.display = 'block';
+      
+      // Update custom input field for specific provider
+      elements.customApiKeyLabel.textContent = `Custom ${providerName} API Key`;
+      elements.customApiKey.value = settingsState[`${provider}Key`] || '';
+    }
+  }
+
+  // When AI Provider Dropdown changes
+  elements.apiProvider.addEventListener('change', () => {
+    updateUI();
+  });
+
+  // When Radio modes change
+  elements.modeBuiltin.addEventListener('change', updateUI);
+  elements.modeCustom.addEventListener('change', updateUI);
+
+  // Sync custom key input to settingsState immediately so it isn't lost on switch
+  elements.customApiKey.addEventListener('input', (e) => {
+    const provider = elements.apiProvider.value;
+    settingsState[`${provider}Key`] = e.target.value.trim();
+  });
+
+  // Keep track of active builtin selection in settingsState
+  elements.builtinKeySelector.addEventListener('change', (e) => {
+    const provider = elements.apiProvider.value;
+    const selectedField = `selectedBuiltin${provider.charAt(0).toUpperCase() + provider.slice(1)}`;
+    settingsState[selectedField] = e.target.value;
+  });
+
+  // Render Built-in Keys Selector and Admin List based on Provider
+  function renderBuiltinKeys(provider) {
+    elements.builtinKeySelector.innerHTML = '';
+    elements.builtinAdminList.innerHTML = '';
+
+    const keys = BUILTIN_KEYS[provider] || [];
+    const selectedField = `selectedBuiltin${provider.charAt(0).toUpperCase() + provider.slice(1)}`;
+    const selectedId = settingsState[selectedField];
+
+    if (keys.length === 0) {
+       elements.builtinKeySelector.innerHTML = '<option value="">No Built-in Keys for this Provider</option>';
+       elements.builtinAdminList.innerHTML = '<div style="color:var(--text-light);font-size:12px;">No keys configured.</div>';
+       return;
+    }
+
+    keys.forEach(key => {
+      const isDisabled = currentDisabledKeys.includes(key.id);
+      
+      // Add to selector if enabled
+      if (!isDisabled) {
+        const option = document.createElement('option');
+        option.value = key.id;
+        option.textContent = key.name;
+        if (key.id === selectedId) option.selected = true;
+        elements.builtinKeySelector.appendChild(option);
+      }
+
+      // Add to admin list
+      const adminItem = document.createElement('div');
+      adminItem.className = 'admin-item';
+      
+      adminItem.innerHTML = `
+        <span class="admin-item-name">${key.name}</span>
+        <label class="switch">
+          <input type="checkbox" data-id="${key.id}" ${!isDisabled ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+      `;
+      
+      // Toggle logic for admin panel
+      adminItem.querySelector('input').addEventListener('change', function(e) {
+        if (e.target.checked) {
+          currentDisabledKeys = currentDisabledKeys.filter(id => id !== key.id);
+        } else {
+          currentDisabledKeys.push(key.id);
+        }
+        // Re-render to reflect enabled/disabled states
+        renderBuiltinKeys(provider);
+      });
+
+      elements.builtinAdminList.appendChild(adminItem);
+    });
+
+    // Ensure state reflects a valid option if current selection became disabled
+    if (elements.builtinKeySelector.options.length > 0 && elements.builtinKeySelector.value) {
+      settingsState[selectedField] = elements.builtinKeySelector.value;
+    } else {
+      settingsState[selectedField] = '';
+    }
+  }
 
   // Load saved settings
-  chrome.storage.sync.get(
-    [
-      'apiProvider',
-      'groqKey',
-      'geminiKey',
-      'deepseekKey',
-      'perplexityKey',
-      'notificationPosition',
-      'notificationOpacity',
-      'displayDuration',
-      'questionType'
-    ],
-    function (data) {
-      // API Provider
-      if (data.apiProvider) {
-        elements.apiProvider.value = data.apiProvider;
-      }
+  const storageKeys = Object.keys(DEFAULT_SETTINGS).concat(['disabledBuiltinKeys']);
+  chrome.storage.sync.get(storageKeys, function (data) {
+    settingsState = { ...DEFAULT_SETTINGS, ...data };
+    currentDisabledKeys = data.disabledBuiltinKeys || [];
 
-      // API Keys
-      if (data.groqKey) {
-        elements.groqKey.value = data.groqKey;
-      }
-      if (data.geminiKey) {
-        elements.geminiKey.value = data.geminiKey;
-      }
-      if (data.deepseekKey) {
-        elements.deepseekKey.value = data.deepseekKey;
-      }
-      if (data.perplexityKey) {
-        elements.perplexityKey.value = data.perplexityKey;
-      }
+    // Initialize UI fields that are persistent across views
+    if (settingsState.apiProvider) elements.apiProvider.value = settingsState.apiProvider;
+    elements.modeCustom.checked = (settingsState.apiMode === 'custom');
+    elements.modeBuiltin.checked = (settingsState.apiMode !== 'custom');
+    elements.autoSwitchEnabled.checked = settingsState.autoSwitchEnabled !== false;
 
-      // New Settings
-      elements.notificationPosition.value = data.notificationPosition || defaultSettings.notificationPosition;
-      elements.notificationOpacity.value = data.notificationOpacity || defaultSettings.notificationOpacity;
-      elements.displayDuration.value = data.displayDuration || defaultSettings.displayDuration;
-      elements.questionType.value = data.questionType || defaultSettings.questionType;
+    // Display Settings
+    elements.notificationPosition.value = settingsState.notificationPosition;
+    elements.notificationOpacity.value = settingsState.notificationOpacity;
+    elements.displayDuration.value = settingsState.displayDuration;
+    elements.questionType.value = settingsState.questionType;
+    elements.opacityValue.textContent = elements.notificationOpacity.value;
+    elements.durationValue.textContent = elements.displayDuration.value;
 
-      // Update display values
-      elements.opacityValue.textContent = elements.notificationOpacity.value;
-      elements.durationValue.textContent = elements.displayDuration.value;
-    }
-  );
+    // Run UI update to populate dynamic fields
+    updateUI();
+  });
 
   // Real-time slider updates
   elements.notificationOpacity.addEventListener('input', function () {
@@ -111,44 +197,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Save settings
   elements.saveButton.addEventListener('click', function () {
-    const apiProvider = elements.apiProvider.value;
-    const groqKey = elements.groqKey.value;
-    const geminiKey = elements.geminiKey.value;
-    const deepseekKey = elements.deepseekKey.value;
-    const perplexityKey = elements.perplexityKey.value;
-    const notificationPosition = elements.notificationPosition.value;
-    const notificationOpacity = parseFloat(elements.notificationOpacity.value);
-    const displayDuration = parseInt(elements.displayDuration.value);
-    const questionType = elements.questionType.value;
+    // Collect settings that aren't dynamically bound to settingsState
+    settingsState.apiProvider = elements.apiProvider.value;
+    settingsState.apiMode = elements.modeBuiltin.checked ? 'builtin' : 'custom';
+    settingsState.autoSwitchEnabled = elements.autoSwitchEnabled.checked;
+    settingsState.notificationPosition = elements.notificationPosition.value;
+    settingsState.notificationOpacity = parseFloat(elements.notificationOpacity.value);
+    settingsState.displayDuration = parseInt(elements.displayDuration.value);
+    settingsState.questionType = elements.questionType.value;
 
-    // Validate settings
-    const validation = validateSettings({
-      apiProvider,
-      groqKey,
-      geminiKey,
-      deepseekKey,
-      perplexityKey,
-      notificationOpacity,
-      displayDuration
-    });
+    const provider = settingsState.apiProvider;
 
-    if (!validation.valid) {
-      showStatus('⚠️ ' + validation.errors.join(', '), 'error');
+    // Validate active settings based on mode
+    const errors = [];
+    if (settingsState.apiMode === 'custom') {
+      if (!settingsState[`${provider}Key`]) {
+        errors.push(`Please enter a Custom API Key for ${provider}`);
+      }
+    } else {
+      const selectedField = `selectedBuiltin${provider.charAt(0).toUpperCase() + provider.slice(1)}`;
+      if (!settingsState[selectedField]) {
+        errors.push(`No active Built-in Key selected for ${provider}. Ensure at least one is enabled.`);
+      }
+    }
+
+    if (isNaN(settingsState.notificationOpacity) || settingsState.notificationOpacity < 0.1 || settingsState.notificationOpacity > 1) {
+      errors.push('Opacity must be between 0.1 and 1.0');
+    }
+
+    if (isNaN(settingsState.displayDuration) || settingsState.displayDuration < 1 || settingsState.displayDuration > 10) {
+      errors.push('Display duration must be between 1 and 10 seconds');
+    }
+
+    if (errors.length > 0) {
+      showStatus('⚠️ ' + errors.join(', '), 'error');
       return;
     }
 
     // Save to Chrome storage
-    chrome.storage.sync.set({
-      apiProvider: apiProvider,
-      groqKey: groqKey,
-      geminiKey: geminiKey,
-      deepseekKey: deepseekKey,
-      perplexityKey: perplexityKey,
-      notificationPosition: notificationPosition,
-      notificationOpacity: notificationOpacity,
-      displayDuration: displayDuration,
-      questionType: questionType
-    }, function () {
+    const storageObject = { ...settingsState, disabledBuiltinKeys: currentDisabledKeys };
+    chrome.storage.sync.set(storageObject, function () {
       if (chrome.runtime.lastError) {
         showStatus('⚠️ Error saving settings: ' + chrome.runtime.lastError.message, 'error');
       } else {
@@ -156,42 +244,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   });
-
-  // Validate settings
-  function validateSettings(settings) {
-    const errors = [];
-
-    // Validate opacity
-    if (isNaN(settings.notificationOpacity) || settings.notificationOpacity < 0.1 || settings.notificationOpacity > 1) {
-      errors.push('Opacity must be between 0.1 and 1.0');
-    }
-
-    // Validate display duration
-    if (isNaN(settings.displayDuration) || settings.displayDuration < 1 || settings.displayDuration > 10) {
-      errors.push('Display duration must be between 1 and 10 seconds');
-    }
-
-    // Validate API key for selected provider
-    let isValid = false;
-    if (settings.apiProvider === 'groq' && settings.groqKey) {
-      isValid = true;
-    } else if (settings.apiProvider === 'gemini' && settings.geminiKey) {
-      isValid = true;
-    } else if (settings.apiProvider === 'deepseek' && settings.deepseekKey) {
-      isValid = true;
-    } else if (settings.apiProvider === 'perplexity' && settings.perplexityKey) {
-      isValid = true;
-    }
-
-    if (!isValid) {
-      errors.push('Please provide an API key for the selected provider');
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors: errors
-    };
-  }
 
   // Show status message
   function showStatus(message, type) {

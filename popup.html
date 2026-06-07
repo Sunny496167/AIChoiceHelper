@@ -37,64 +37,48 @@
       <div class="divider"></div>
       
       <div class="section">
-        <div class="section-title">API Keys</div>
-        <div class="api-grid">
-          <div class="api-card">
-            <div class="api-header">
-              <div class="api-icon icon-groq">⚡</div>
-              <div class="api-name">Groq</div>
-            </div>
-            <div class="input-wrapper">
-              <input type="password" id="groq-key" placeholder="gsk_...">
-              <div class="input-icon toggle-password" data-target="groq-key">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </div>
-            </div>
+        <div class="section-title">API Source</div>
+        
+        <div class="radio-group form-group">
+          <label class="radio-label">
+            <input type="radio" name="api-mode" value="builtin" id="mode-builtin">
+            <span>Built-in API Keys</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="api-mode" value="custom" id="mode-custom">
+            <span>Custom API Key</span>
+          </label>
+        </div>
+
+        <div id="builtin-section" class="mode-section">
+          <div class="form-group">
+            <label for="builtin-key-selector">Select Built-in API</label>
+            <select id="builtin-key-selector">
+              <!-- Dynamically populated -->
+            </select>
           </div>
           
-          <div class="api-card">
-            <div class="api-header">
-              <div class="api-icon icon-gemini">💎</div>
-              <div class="api-name">Gemini</div>
-            </div>
-            <div class="input-wrapper">
-              <input type="password" id="gemini-key" placeholder="AIza...">
-              <div class="input-icon toggle-password" data-target="gemini-key">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </div>
-            </div>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text);">
+              <input type="checkbox" id="auto-switch-enabled" style="width: auto; margin: 0; cursor: pointer;">
+              <span>Auto Switch On Failure</span>
+            </label>
           </div>
-          
-          <div class="api-card">
-            <div class="api-header">
-              <div class="api-icon icon-deepseek">🔥</div>
-              <div class="api-name">DeepSeek</div>
+
+          <details class="admin-panel" style="margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: var(--secondary);">
+            <summary style="font-weight: 600; font-size: 13px; cursor: pointer; color: var(--text-light); outline: none;">Built-in API Keys (Admin)</summary>
+            <div id="builtin-admin-list" class="admin-list" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamically populated -->
             </div>
+          </details>
+        </div>
+
+        <div id="custom-section" class="mode-section" style="display: none;">
+          <div class="form-group">
+            <label for="custom-api-key">Custom API Key</label>
             <div class="input-wrapper">
-              <input type="password" id="deepseek-key" placeholder="sk-...">
-              <div class="input-icon toggle-password" data-target="deepseek-key">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </div>
-            </div>
-          </div>
-          
-          <div class="api-card">
-            <div class="api-header">
-              <div class="api-icon icon-perplexity">🌊</div>
-              <div class="api-name">Perplexity</div>
-            </div>
-            <div class="input-wrapper">
-              <input type="password" id="perplexity-key" placeholder="pplx-...">
-              <div class="input-icon toggle-password" data-target="perplexity-key">
+              <input type="password" id="custom-api-key" placeholder="Enter your own key...">
+              <div class="input-icon toggle-password" data-target="custom-api-key">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
@@ -164,6 +148,6 @@
     </div>
   </div>
   
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>
