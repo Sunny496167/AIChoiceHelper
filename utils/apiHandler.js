@@ -22,14 +22,14 @@ export function buildAPIRequest(provider, apiKey, text, questionType) {
     let requestBody = {};
 
     switch (provider) {
-        case API_PROVIDERS.OPENAI:
-            apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+        case API_PROVIDERS.GROQ:
+            apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`
             };
             requestBody = {
-                model: 'openai/chatgpt-4o-latest',
+                model: 'openai/gpt-oss-120b',
                 messages: [
                     { role: 'system', content: systemMessage },
                     { role: 'user', content: prompt }
@@ -147,7 +147,7 @@ function extractResponse(provider, data) {
     let result = '';
 
     try {
-        if (provider === API_PROVIDERS.OPENAI ||
+        if (provider === API_PROVIDERS.GROQ ||
             provider === API_PROVIDERS.DEEPSEEK ||
             provider === API_PROVIDERS.PERPLEXITY) {
             result = data.choices[0].message.content.trim();

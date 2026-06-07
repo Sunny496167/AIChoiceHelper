@@ -2,12 +2,12 @@
 
 // Default settings
 export const DEFAULT_SETTINGS = {
-  apiProvider: 'openai',
+  apiProvider: 'groq',
   notificationOpacity: 0.9,
   notificationPosition: 'center',
   questionType: 'mcq',
   displayDuration: 3,
-  openaiKey: '',
+  groqKey: '',
   geminiKey: '',
   deepseekKey: '',
   perplexityKey: ''
@@ -67,7 +67,7 @@ export const QUESTION_TYPE_CONFIG = {
 
 // API Providers
 export const API_PROVIDERS = {
-  OPENAI: 'openai',
+  GROQ: 'groq',
   GEMINI: 'gemini',
   DEEPSEEK: 'deepseek',
   PERPLEXITY: 'perplexity'

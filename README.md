@@ -36,7 +36,7 @@ A powerful Chrome extension that provides AI-powered answers for various questio
 - **Display Duration** - Set how long answers appear (1-10 seconds)
 
 ### 🤖 Multiple AI Providers
-- OpenAI (ChatGPT)
+- Groq (Beta/LPU)
 - Google Gemini
 - DeepSeek
 - Perplexity
@@ -92,7 +92,7 @@ A powerful Chrome extension that provides AI-powered answers for various questio
 
 You'll need an API key from at least one provider:
 
-- **OpenAI**: Get key from [OpenRouter](https://openrouter.ai/)
+- **Groq**: Get key from the [Groq Console](https://console.groq.com/)
 - **Gemini**: Get key from [Google AI Studio](https://aistudio.google.com/)
 - **DeepSeek**: Get key from [OpenRouter](https://openrouter.ai/)
 - **Perplexity**: Get key from [Perplexity](https://www.perplexity.ai/)
@@ -206,7 +206,7 @@ For issues or questions:
 - 🎨 Customizable notification opacity
 - 📍 5 position options for notifications
 - ⏱️ Adjustable display duration (1-10s)
-- 🤖 Support for 4 AI providers (OpenAI, Gemini, DeepSeek, Perplexity)
+- 🤖 Support for 4 AI providers (Groq, Gemini, DeepSeek, Perplexity)
 - 🎯 Enhanced error handling
 - 📁 Improved code organization with utility modules
 - 💅 Modern UI with custom sliders and gradients

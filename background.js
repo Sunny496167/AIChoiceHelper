@@ -6,7 +6,7 @@
 // ============================================================================
 
 const DEFAULT_SETTINGS = {
-  apiProvider: 'openai',
+  apiProvider: 'groq',
   notificationOpacity: 0.9,
   notificationPosition: 'center',
   questionType: 'mcq',
@@ -162,7 +162,7 @@ function processSelectedText(selectedText, tabId) {
   chrome.storage.sync.get(
     [
       'apiProvider',
-      'openaiKey',
+      'groqKey',
       'geminiKey',
       'deepseekKey',
       'perplexityKey',
@@ -181,8 +181,8 @@ function processSelectedText(selectedText, tabId) {
 
       // Get the appropriate API key
       switch (provider) {
-        case 'openai':
-          apiKey = settings.openaiKey;
+        case 'groq':
+          apiKey = settings.groqKey;
           break;
         case 'gemini':
           apiKey = settings.geminiKey;
@@ -194,7 +194,7 @@ function processSelectedText(selectedText, tabId) {
           apiKey = settings.perplexityKey;
           break;
         default:
-          apiKey = settings.openaiKey;
+          apiKey = settings.groqKey;
       }
 
       if (!apiKey) {
@@ -233,14 +233,14 @@ function callAIAPI(provider, apiKey, text, questionType, settings, tabId) {
   console.log(`Calling ${provider} API for question type: ${questionType}`);
 
   switch (provider) {
-    case 'openai':
-      apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    case 'groq':
+      apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
       headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       };
       requestBody = {
-        model: 'openai/chatgpt-4o-latest',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
@@ -363,7 +363,7 @@ function extractResponse(provider, data) {
   let result = '';
 
   try {
-    if (provider === 'openai' || provider === 'deepseek' || provider === 'perplexity') {
+    if (provider === 'groq' || provider === 'deepseek' || provider === 'perplexity') {
       result = data.choices[0].message.content.trim();
     } else if (provider === 'gemini') {
       if (data.candidates && data.candidates[0]) {
@@ -605,7 +605,7 @@ function handleCodingProblem(request, tabId, sendResponse) {
 
   // Get settings from storage
   chrome.storage.sync.get(
-    ['apiProvider', 'openaiKey', 'geminiKey', 'deepseekKey', 'perplexityKey'],
+    ['apiProvider', 'groqKey', 'geminiKey', 'deepseekKey', 'perplexityKey'],
     function (data) {
       const settings = { ...DEFAULT_SETTINGS, ...data };
       const provider = settings.apiProvider;
@@ -614,8 +614,8 @@ function handleCodingProblem(request, tabId, sendResponse) {
 
       // Get the appropriate API key
       switch (provider) {
-        case 'openai':
-          apiKey = settings.openaiKey;
+        case 'groq':
+          apiKey = settings.groqKey;
           break;
         case 'gemini':
           apiKey = settings.geminiKey;
@@ -627,7 +627,7 @@ function handleCodingProblem(request, tabId, sendResponse) {
           apiKey = settings.perplexityKey;
           break;
         default:
-          apiKey = settings.openaiKey;
+          apiKey = settings.groqKey;
       }
 
       if (!apiKey) {
@@ -725,14 +725,14 @@ function callCodingAI(provider, apiKey, prompt, systemMessage, maxTokens, sendRe
   console.log(`[Coding Assistant] Calling ${provider} API with max tokens: ${maxTokens}`);
 
   switch (provider) {
-    case 'openai':
-      apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    case 'groq':
+      apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
       headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       };
       requestBody = {
-        model: 'openai/chatgpt-4o-latest',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }

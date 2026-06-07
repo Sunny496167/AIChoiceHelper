@@ -26,7 +26,7 @@
         <div class="form-group">
           <label for="api-provider">Choose your AI model</label>
           <select id="api-provider">
-            <option value="openai">ChatGPT (OpenAI)</option>
+            <option value="groq">Groq (Beta/LPU)</option>
             <option value="gemini">Gemini (Google)</option>
             <option value="deepseek">DeepSeek</option>
             <option value="perplexity">Perplexity</option>
@@ -41,12 +41,12 @@
         <div class="api-grid">
           <div class="api-card">
             <div class="api-header">
-              <div class="api-icon icon-openai">🤖</div>
-              <div class="api-name">OpenAI</div>
+              <div class="api-icon icon-groq">⚡</div>
+              <div class="api-name">Groq</div>
             </div>
             <div class="input-wrapper">
-              <input type="password" id="openai-key" placeholder="sk-...">
-              <div class="input-icon" onclick="togglePassword('openai-key')">
+              <input type="password" id="groq-key" placeholder="gsk_...">
+              <div class="input-icon toggle-password" data-target="groq-key">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
@@ -62,7 +62,7 @@
             </div>
             <div class="input-wrapper">
               <input type="password" id="gemini-key" placeholder="AIza...">
-              <div class="input-icon" onclick="togglePassword('gemini-key')">
+              <div class="input-icon toggle-password" data-target="gemini-key">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
@@ -78,7 +78,7 @@
             </div>
             <div class="input-wrapper">
               <input type="password" id="deepseek-key" placeholder="sk-...">
-              <div class="input-icon" onclick="togglePassword('deepseek-key')">
+              <div class="input-icon toggle-password" data-target="deepseek-key">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
@@ -94,7 +94,7 @@
             </div>
             <div class="input-wrapper">
               <input type="password" id="perplexity-key" placeholder="pplx-...">
-              <div class="input-icon" onclick="togglePassword('perplexity-key')">
+              <div class="input-icon toggle-password" data-target="perplexity-key">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
